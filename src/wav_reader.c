@@ -71,7 +71,7 @@ struct data_subchunk read_data_subchunk(FILE *fp) {
 void print_wav_header_info(struct wav_header wh) {
 		printf("SubChunk ID     : %.4s\n", wh.riff_header.chunk_id);
 		printf("SubChunk Size   : %u\n", wh.riff_header.chunk_size);
-		printf("Audio Format    : %s\n", wh.riff_header.format);
+		printf("Audio Format    : %.4s\n", wh.riff_header.format);
 
 		printf("SubChunk1 ID    : %.4s\n", wh.fmt_subchunk.subchunk1_id);
 		printf("SubChunk1 Size  : %u\n", wh.fmt_subchunk.subchunk1_size);
