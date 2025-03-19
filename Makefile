@@ -1,7 +1,7 @@
 BUILD_DIR = ./build
 TARGET = $(BUILD_DIR)/player
 
-TARGET_FILES = src/player.c src/wav_reader.c
+TARGET_FILES = src/main.c src/wav_reader.c
 TARGET_HEADERS = src/wav_reader.h
 
 $(TARGET): $(TARGET_FILES) | $(BUILD_DIR)
