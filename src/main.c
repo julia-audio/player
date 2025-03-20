@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "miniaudio.h"
 #include "wav_reader.h"
 
 void print_usage() {
@@ -57,6 +58,22 @@ int main(int argc, char *argv[]) {
 	if (verbose)
 		print_wav_header_info(wh);
 
+	// play sound
+	ma_result result;
+	ma_engine engine;
+
+	result = ma_engine_init(NULL, &engine);
+	if (result != MA_SUCCESS) {
+		return result;
+	}
+
+	ma_engine_play_sound(&engine, filename, NULL);
+
+	printf("Press Enter to quit");
+	getchar();
+
+	ma_engine_uninit(&engine);
+	
 	fclose(file);
 
 	return 0;
