@@ -1,11 +1,12 @@
 BUILD_DIR = ./build
 TARGET = $(BUILD_DIR)/player
 
-TARGET_FILES = src/main.c src/wav_reader.c
-TARGET_HEADERS = src/wav_reader.h
+TARGET_FILES = src/main.c src/wav_reader.c src/miniaudio.c
+TARGET_HEADERS = src/wav_reader.h src/miniaudio.h
+LDFLAGS = -lm
 
 $(TARGET): $(TARGET_FILES) | $(BUILD_DIR)
-	$(CC) $(TARGET_FILES) -o $(TARGET) -Wall -Wextra -pedantic -std=c99
+	$(CC) $(TARGET_FILES) -o $(TARGET) -Wall -Wextra -pedantic -std=c99 $(LDFLAGS)
 
 $(BUILD_DIR):
 	mkdir -pv $(BUILD_DIR)
