@@ -10,6 +10,12 @@ int VERBOSE = 0;
 int CHANNELS;
 int SAMPLE_RATE;
 
+int is_paused = 0;
+
+ma_decoder decoder;
+ma_device device;
+
+
 void print_usage() {
 	printf("Usage: player [OPTIONS] <.wav file>\n");
 	printf("Options:\n");
@@ -53,8 +59,6 @@ void print_song_info(char *filename) {
 
 void play(char *filename) {
 	ma_result result;
-	ma_decoder decoder;
-	ma_device device;
 	ma_device_config deviceConfig;
 
 	result = ma_decoder_init_file(filename, NULL, &decoder);
@@ -88,11 +92,46 @@ void play(char *filename) {
 		CHANNELS = decoder.outputChannels;
 		SAMPLE_RATE = decoder.outputSampleRate;
 	}
+}
 
-	getchar();
-	
+void audio_clean() {
 	ma_device_uninit(&device);
 	ma_decoder_uninit(&decoder);
+}
+
+void init_terminal() {
+	initscr();
+	cbreak();
+	noecho();
+	keypad(stdscr, TRUE);
+	nodelay(stdscr, TRUE);
+	curs_set(0);
+}
+
+void print_playback_ui(char *title) {
+	mvprintw(0, 0, "Now Playing: %s", title);
+	refresh();
+}
+
+void draw(char *title) {
+	printw("press 'q' to exit\n");
+	refresh();
+
+	int ch;
+	while((ch = getch()) != 'q') {
+		if (ch == ' ') {
+			if (is_paused) {
+				ma_device_start(&device);
+				is_paused = 0;
+			} else {
+				ma_device_stop(&device);
+				is_paused = 1;
+			}
+		}
+		print_playback_ui(title);
+	}
+
+	endwin();
 }
 
 int main(int argc, char *argv[]) {
@@ -117,11 +156,30 @@ int main(int argc, char *argv[]) {
 		print_usage();
 		return 1;
 	}
+
+	TagLib_File *file = taglib_file_new(filename);
+	const TagLib_Tag *tag = taglib_file_tag(file);
+	char *title;
+
+	if (tag == NULL) {
+		title = filename;
+		taglib_file_free(file);
+	}
+
+	title = taglib_tag_title(tag);
+	if (strcmp(title, "") == 0) {
+		title = filename;
+	}
 	
+	init_terminal();
 	play(filename);
+	draw(title);
 
 	if (VERBOSE) 
 		print_song_info(filename);
+
+	audio_clean();
+	taglib_file_free(file);
 
 	return 0;
 }
