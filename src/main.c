@@ -24,6 +24,34 @@ void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uin
 	(void)pInput;
 }
 
+void print_song_info(char *filename, ma_decoder decoder) {
+	TagLib_File *file = taglib_file_new(filename);
+	const TagLib_Tag *tag = taglib_file_tag(file);
+
+	if (tag == NULL) {
+		fprintf(stderr, "No tag found in file. \n");
+		taglib_file_free(file);
+	}
+	
+	printf("file name   : %s\n", filename);
+	printf("Title       : %s\n", taglib_tag_title(tag));
+	printf("Artist      : %s\n", taglib_tag_artist(tag));
+	printf("Album       : %s\n", taglib_tag_album(tag));
+	printf("Year        : %d\n", taglib_tag_year(tag));
+	printf("Track       : %d\n", taglib_tag_track(tag));
+	printf("Genre       : %s\n", taglib_tag_genre(tag));
+
+	printf("channels    : %i\n", decoder.outputChannels);
+	printf("sample rate : %i\n", decoder.outputSampleRate);
+
+	taglib_file_free(file);
+}
+
+void miniaudio_cleanup(ma_decoder decoder, ma_device device) {
+	ma_device_uninit(&device);
+	ma_decoder_uninit(&decoder);
+}
+
 int main(int argc, char *argv[]) {
 	int verbose = 0;
 	char *filename = NULL;
@@ -86,34 +114,14 @@ int main(int argc, char *argv[]) {
 		return -4;
 	}
 
-	// information print
-	TagLib_File *tag_file = taglib_file_new(filename);
-	const TagLib_Tag *tag = taglib_file_tag(tag_file);
-
-	if (tag == NULL) {
-		fprintf(stderr, "No tag found in file. \n");
-		taglib_file_free(tag_file);
-	}
-
-	if (verbose) {
-		printf("Title: %s\n", taglib_tag_title(tag));
-		printf("Artist: %s\n", taglib_tag_artist(tag));
-		printf("Album: %s\n", taglib_tag_album(tag));
-		printf("Year: %d\n", taglib_tag_year(tag));
-		printf("Track: %d\n", taglib_tag_track(tag));
-		printf("Genre: %s\n", taglib_tag_genre(tag));
-
-		printf("channels: %i\n", decoder.outputChannels);
-		printf("sample rate: %i\n", decoder.outputSampleRate);
-	}
+	if (verbose) 
+		print_song_info(filename, decoder);
 
 	printf("Press Enter to quit...");
 	getchar();
 
 	// cleanup
-	ma_device_uninit(&device);
-	ma_decoder_uninit(&decoder);
-	taglib_file_free(tag_file);
+	miniaudio_cleanup(decoder, device);
 	
 	fclose(file);
 
