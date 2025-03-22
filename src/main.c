@@ -7,6 +7,7 @@
 #include "miniaudio.h"
 
 int is_paused = 0;
+int is_helper_open = 0;
 ma_decoder decoder;
 ma_device device;
 
@@ -79,7 +80,35 @@ void print_playback_ui(char *title) {
 	refresh();
 }
 
+void print_helper_ui() {
+	int rows, cols;
+	getmaxyx(stdscr, rows, cols);
+
+	if (is_helper_open) {
+		const char *msg1 = "| help: h     |";
+		const char *msg2 = "| stop: space |";
+		const char *msg3 = "| quit: q     |";
+
+		mvprintw(rows - 3, cols - 15, "%s", msg1);
+		mvprintw(rows - 2, cols - 15, "%s", msg2);
+		mvprintw(rows - 1, cols - 15, "%s", msg3);
+		refresh();
+	} else {
+		for (int i = 1; i < 4; i++) {
+			move(rows - i, cols - 15);
+			clrtoeol();
+		}
+		refresh();
+
+		const char *msg = "help: h";
+		mvprintw(rows - 1, cols - strlen(msg), "%s", msg);
+		refresh();
+	}
+}
+
 void draw(char *title) {
+	print_helper_ui();
+
 	int ch;
 	while((ch = getch()) != 'q') {
 		if (ch == ' ') {
@@ -91,11 +120,23 @@ void draw(char *title) {
 				is_paused = 1;
 			}
 		}
+
+		if (ch == 'h') {
+			if(is_helper_open) {
+				is_helper_open = 0;
+				print_helper_ui();
+			} else {
+				is_helper_open = 1;
+				print_helper_ui();
+			}
+		}
 		print_playback_ui(title);
 	}
 
 	endwin();
 }
+
+
 
 int main(int argc, char *argv[]) {
 	char *filename = NULL;
