@@ -3,7 +3,7 @@ TARGET = $(BUILD_DIR)/player
 
 TARGET_FILES = src/main.c src/miniaudio.c
 TARGET_HEADERS = src/miniaudio.h
-LDFLAGS = -lm -ltag -ltag_c
+LDFLAGS = -lm -ltag -ltag_c -lncurses
 
 $(TARGET): $(TARGET_FILES) | $(BUILD_DIR)
 	$(CC) $(TARGET_FILES) -o $(TARGET) -Wall -Wextra -pedantic -std=c99 $(LDFLAGS)

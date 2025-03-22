@@ -2,9 +2,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <ncurses.h>
 #include <taglib/tag_c.h>
 #include "miniaudio.h"
+
+int VERBOSE = 0;
+int CHANNELS;
+int SAMPLE_RATE;
 
 void print_usage() {
 	printf("Usage: player [OPTIONS] <.wav file>\n");
@@ -24,7 +28,7 @@ void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uin
 	(void)pInput;
 }
 
-void print_song_info(char *filename, ma_decoder decoder) {
+void print_song_info(char *filename) {
 	TagLib_File *file = taglib_file_new(filename);
 	const TagLib_Tag *tag = taglib_file_tag(file);
 
@@ -41,24 +45,62 @@ void print_song_info(char *filename, ma_decoder decoder) {
 	printf("Track       : %d\n", taglib_tag_track(tag));
 	printf("Genre       : %s\n", taglib_tag_genre(tag));
 
-	printf("channels    : %i\n", decoder.outputChannels);
-	printf("sample rate : %i\n", decoder.outputSampleRate);
+	printf("channels    : %i\n", CHANNELS);
+	printf("sample rate : %i\n", SAMPLE_RATE);
 
 	taglib_file_free(file);
 }
 
-void miniaudio_cleanup(ma_decoder decoder, ma_device device) {
+void play(char *filename) {
+	ma_result result;
+	ma_decoder decoder;
+	ma_device device;
+	ma_device_config deviceConfig;
+
+	result = ma_decoder_init_file(filename, NULL, &decoder);
+	if (result != MA_SUCCESS) {
+		exit(EXIT_FAILURE);
+	}
+	
+	deviceConfig = ma_device_config_init(ma_device_type_playback);
+
+	deviceConfig.playback.format   = decoder.outputFormat;
+	deviceConfig.playback.channels = decoder.outputChannels;
+	deviceConfig.sampleRate        = decoder.outputSampleRate;
+	deviceConfig.dataCallback      = data_callback;
+	deviceConfig.pUserData         = &decoder;
+
+	if (ma_device_init(NULL, &deviceConfig, &device) != MA_SUCCESS) {
+		printf("Failed to open playback device.\n");
+		ma_decoder_uninit(&decoder);
+		exit(EXIT_FAILURE);
+	}
+
+	if (ma_device_start(&device) != MA_SUCCESS) {
+		printf("Failed to start playback device.\n");
+		
+		ma_device_uninit(&device);
+		ma_decoder_uninit(&decoder);
+		exit(EXIT_FAILURE);
+	}
+
+	if (VERBOSE) {
+		CHANNELS = decoder.outputChannels;
+		SAMPLE_RATE = decoder.outputSampleRate;
+	}
+
+	getchar();
+	
 	ma_device_uninit(&device);
 	ma_decoder_uninit(&decoder);
 }
 
 int main(int argc, char *argv[]) {
-	int verbose = 0;
 	char *filename = NULL;
 
 	for (int i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "--verbose") == 0 || strcmp(argv[i], "-v") == 0) {
-			verbose = 1;
+			VERBOSE = 1;
 		} else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
 			print_usage();
 			return 0;
@@ -75,55 +117,11 @@ int main(int argc, char *argv[]) {
 		print_usage();
 		return 1;
 	}
-
-	FILE *file = fopen(filename, "rb");
-	if (!file) {
-		perror("failed open file");
-		return 1;
-	}
-
-	// play sound
-	ma_result result;
-	ma_decoder decoder;
-	ma_device_config deviceConfig;
-	ma_device device;
-
-	result = ma_decoder_init_file(filename, NULL, &decoder);
-	if (result != MA_SUCCESS) {
-		return -2;
-	}
-
-	deviceConfig = ma_device_config_init(ma_device_type_playback);
-	deviceConfig.playback.format = decoder.outputFormat;
-	deviceConfig.playback.channels = decoder.outputChannels;
-	deviceConfig.sampleRate = decoder.outputSampleRate;
-	deviceConfig.dataCallback = data_callback;
-	deviceConfig.pUserData = &decoder;
-
-	if (ma_device_init(NULL, &deviceConfig, &device) != MA_SUCCESS) {
-		printf("Failed to open playback device.\n");
-		ma_decoder_uninit(&decoder);
-		return -3;
-	}
-
-	if (ma_device_start(&device) != MA_SUCCESS) {
-		printf("Failed to start playback device.\n");
-		
-		ma_device_uninit(&device);
-		ma_decoder_uninit(&decoder);
-		return -4;
-	}
-
-	if (verbose) 
-		print_song_info(filename, decoder);
-
-	printf("Press Enter to quit...");
-	getchar();
-
-	// cleanup
-	miniaudio_cleanup(decoder, device);
 	
-	fclose(file);
+	play(filename);
+
+	if (VERBOSE) 
+		print_song_info(filename);
 
 	return 0;
 }
