@@ -6,20 +6,14 @@
 #include <taglib/tag_c.h>
 #include "miniaudio.h"
 
-int VERBOSE = 0;
-int CHANNELS;
-int SAMPLE_RATE;
-
 int is_paused = 0;
-
 ma_decoder decoder;
 ma_device device;
 
 
 void print_usage() {
-	printf("Usage: player [OPTIONS] <.wav file>\n");
+	printf("Usage: player [OPTIONS] <file>\n");
 	printf("Options:\n");
-	printf("  -v, --verbose  show wav header information\n");
 	printf("  -h, --help     show this help message\n");
 }
 
@@ -32,29 +26,6 @@ void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uin
 	ma_decoder_read_pcm_frames(pDecoder, pOutput, frameCount, NULL);
 
 	(void)pInput;
-}
-
-void print_song_info(char *filename) {
-	TagLib_File *file = taglib_file_new(filename);
-	const TagLib_Tag *tag = taglib_file_tag(file);
-
-	if (tag == NULL) {
-		fprintf(stderr, "No tag found in file. \n");
-		taglib_file_free(file);
-	}
-	
-	printf("file name   : %s\n", filename);
-	printf("Title       : %s\n", taglib_tag_title(tag));
-	printf("Artist      : %s\n", taglib_tag_artist(tag));
-	printf("Album       : %s\n", taglib_tag_album(tag));
-	printf("Year        : %d\n", taglib_tag_year(tag));
-	printf("Track       : %d\n", taglib_tag_track(tag));
-	printf("Genre       : %s\n", taglib_tag_genre(tag));
-
-	printf("channels    : %i\n", CHANNELS);
-	printf("sample rate : %i\n", SAMPLE_RATE);
-
-	taglib_file_free(file);
 }
 
 void play(char *filename) {
@@ -87,11 +58,6 @@ void play(char *filename) {
 		ma_decoder_uninit(&decoder);
 		exit(EXIT_FAILURE);
 	}
-
-	if (VERBOSE) {
-		CHANNELS = decoder.outputChannels;
-		SAMPLE_RATE = decoder.outputSampleRate;
-	}
 }
 
 void audio_clean() {
@@ -114,9 +80,6 @@ void print_playback_ui(char *title) {
 }
 
 void draw(char *title) {
-	printw("press 'q' to exit\n");
-	refresh();
-
 	int ch;
 	while((ch = getch()) != 'q') {
 		if (ch == ' ') {
@@ -138,9 +101,7 @@ int main(int argc, char *argv[]) {
 	char *filename = NULL;
 
 	for (int i = 1; i < argc; i++) {
-		if (strcmp(argv[i], "--verbose") == 0 || strcmp(argv[i], "-v") == 0) {
-			VERBOSE = 1;
-		} else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
+		if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
 			print_usage();
 			return 0;
 		} else if (argv[i][0] == '-') {
@@ -174,9 +135,6 @@ int main(int argc, char *argv[]) {
 	init_terminal();
 	play(filename);
 	draw(title);
-
-	if (VERBOSE) 
-		print_song_info(filename);
 
 	audio_clean();
 	taglib_file_free(file);
