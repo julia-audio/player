@@ -32,22 +32,25 @@ void draw_helper_ui() {
   int rows, cols;
   getmaxyx(stdscr, rows, cols);
 
-  if (is_helper_open) {
-    const char *msg1 = "| help         : h             |";
-    const char *msg2 = "| stop         : space         |";
-    const char *msg3 = "| quit         : q             |";
-    const char *msg4 = "| change volume: arrow up/down |";
-    const char *msg5 = "| mute         : m             |";
+  const char *help_msgs[] = {"help: h",
+                             "pause & resume: space",
+                             "quit: q",
+                             "volume up: arrow up",
+                             "volume down: arrow down",
+                             "mute toggle: m",
+                             "seek -5 sec: arrow left",
+                             "seek +5 sec: arrow right"};
 
-    mvprintw(rows - 5, cols - 32, "%s", msg1);
-    mvprintw(rows - 4, cols - 32, "%s", msg2);
-    mvprintw(rows - 3, cols - 32, "%s", msg3);
-    mvprintw(rows - 2, cols - 32, "%s", msg4);
-    mvprintw(rows - 1, cols - 32, "%s", msg5);
+  int num_msgs = sizeof(help_msgs) / sizeof(help_msgs[0]);
+
+  if (is_helper_open) {
+    for (int i = 0; i < num_msgs; i++) {
+      mvprintw(rows - (num_msgs - i), cols - 32, "%s", help_msgs[i]);
+    }
     refresh();
   } else {
-    for (int i = 1; i < 6; i++) {
-      move(rows - i, cols - 32);
+    for (int i = 0; i < num_msgs; i++) {
+      move(rows - (num_msgs - i), cols - 32);
       clrtoeol();
     }
     refresh();
@@ -127,6 +130,12 @@ void draw(char *title) {
       decrease_volume();
       draw_playback_ui(title);
     }
+
+    if (ch == KEY_LEFT)
+      seek(-5);
+
+    if (ch == KEY_RIGHT)
+      seek(5);
 
     if (ch == 'm') {
       if (is_mute) {

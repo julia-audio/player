@@ -78,3 +78,33 @@ void mute_toggle() {
     is_paused = 1;
   }
 }
+
+void seek(int seconds) {
+  ma_uint64 current_frame;
+  ma_uint64 target_frame;
+  ma_uint64 total_frames;
+  ma_result result;
+
+  result = ma_decoder_get_cursor_in_pcm_frames(&decoder, &current_frame);
+  if (result != MA_SUCCESS)
+    return;
+
+  ma_decoder_get_length_in_pcm_frames(&decoder, &total_frames);
+
+  ma_uint64 offset = abs(seconds) * decoder.outputSampleRate;
+
+  if (seconds >= 0) {
+    target_frame = current_frame + offset;
+
+    if (target_frame > total_frames)
+      target_frame = total_frames;
+  } else {
+    if (offset > current_frame) {
+      target_frame = 0;
+    } else {
+      target_frame = current_frame - offset;
+    }
+  }
+
+  ma_decoder_seek_to_pcm_frame(&decoder, target_frame);
+}
