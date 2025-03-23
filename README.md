@@ -10,6 +10,4 @@ ncurses(https://www.gnu.org/software/guile-ncurses/)
 
 seek backword / forward using arrow keys
 
-draw progressbar
-
 draw VU meter (or other visualizer)
