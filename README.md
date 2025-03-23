@@ -8,6 +8,6 @@ ncurses(https://www.gnu.org/software/guile-ncurses/)
 
 ### TODO
 
-seek backword / forward using arrow keys
+UI REFACTORING
 
 draw VU meter (or other visualizer)
