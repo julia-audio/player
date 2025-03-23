@@ -11,3 +11,13 @@ ncurses(https://www.gnu.org/software/guile-ncurses/)
 UI REFACTORING
 
 draw VU meter (or other visualizer)
+
+play multiple song & show list
+
+playlist
+
+shuffle
+
+repeat
+
+play from spotify
