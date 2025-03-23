@@ -1,8 +1,8 @@
 BUILD_DIR = ./build
 TARGET = $(BUILD_DIR)/player
 
-TARGET_FILES = src/main.c src/miniaudio.c
-TARGET_HEADERS = src/miniaudio.h
+TARGET_FILES = src/main.c src/miniaudio.c src/ui.c src/player.c
+TARGET_HEADERS = src/miniaudio.h src/ui.h src/player.h
 
 PKG_CONFIG_LIBS = $(shell pkg-config --libs taglib ncurses)
 PKG_CONFIG_CFLAGS = $(shell pkg-config --cflags taglib ncurses)
