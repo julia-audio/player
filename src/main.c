@@ -7,6 +7,7 @@
 #include <taglib/tag_c.h>
 
 float volume = 1.0f;
+int is_mute = 0;
 int is_paused = 0;
 int is_helper_open = 0;
 ma_decoder decoder;
@@ -31,7 +32,11 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
   ma_uint32 channels = pDevice->playback.channels;
 
   for (ma_uint32 i = 0; i < frameCount * channels; ++i) {
-    buffer[i] *= volume;
+    if (is_mute) {
+      buffer[i] *= 0.0;
+    } else {
+      buffer[i] *= volume;
+    }
   }
 
   (void)pInput;
@@ -99,7 +104,11 @@ void print_playback_ui(char *title) {
   mvprintw(0, 0, "Now Playing: %s", title);
   move(1, 0);
   clrtoeol();
-  mvprintw(1, 0, "Volume: %d%%", (int)(volume * 100.0f + 0.5f));
+  if (is_mute) {
+    mvprintw(1, 0, "Volume: mute");
+  } else {
+    mvprintw(1, 0, "Volume: %d%%", (int)(volume * 100.0f + 0.5f));
+  }
   refresh();
 }
 
@@ -112,14 +121,16 @@ void print_helper_ui() {
     const char *msg2 = "| stop         : space         |";
     const char *msg3 = "| quit         : q             |";
     const char *msg4 = "| change volume: arrow up/down |";
+    const char *msg5 = "| mute         : m             |";
 
-    mvprintw(rows - 4, cols - 32, "%s", msg1);
-    mvprintw(rows - 3, cols - 32, "%s", msg2);
-    mvprintw(rows - 2, cols - 32, "%s", msg3);
-    mvprintw(rows - 1, cols - 32, "%s", msg4);
+    mvprintw(rows - 5, cols - 32, "%s", msg1);
+    mvprintw(rows - 4, cols - 32, "%s", msg2);
+    mvprintw(rows - 3, cols - 32, "%s", msg3);
+    mvprintw(rows - 2, cols - 32, "%s", msg4);
+    mvprintw(rows - 1, cols - 32, "%s", msg5);
     refresh();
   } else {
-    for (int i = 1; i < 5; i++) {
+    for (int i = 1; i < 6; i++) {
       move(rows - i, cols - 32);
       clrtoeol();
     }
@@ -163,6 +174,15 @@ void draw(char *title) {
 
     if (ch == KEY_DOWN) {
       decrease_volume();
+      print_playback_ui(title);
+    }
+
+    if (ch == 'm') {
+      if (is_mute) {
+        is_mute = 0;
+      } else {
+        is_mute = 1;
+      }
       print_playback_ui(title);
     }
 
