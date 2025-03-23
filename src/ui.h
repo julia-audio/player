@@ -3,10 +3,9 @@
 #include "miniaudio.h"
 extern int is_mute;
 extern ma_device device;
+extern ma_decoder decoder;
 
 void init_terminal();
 void draw(char *title);
-void draw_playback_ui(char *title);
-void draw_helper_ui();
 
 #endif

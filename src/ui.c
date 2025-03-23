@@ -58,6 +58,47 @@ void draw_helper_ui() {
   }
 }
 
+void format_time(ma_uint64 frames, ma_uint32 sample_rate, char *out,
+                 size_t out_size) {
+  ma_uint64 seconds = frames / sample_rate;
+  snprintf(out, out_size, "%02llu:%02llu", seconds / 60, seconds % 60);
+}
+
+void draw_position() {
+  ma_uint64 cursor_frame = 0;
+  ma_uint64 total_frame = 0;
+  ma_decoder_get_cursor_in_pcm_frames(&decoder, &cursor_frame);
+  ma_decoder_get_length_in_pcm_frames(&decoder, &total_frame);
+
+  int percent = 0;
+  if (total_frame > 0) {
+    percent = (int)((cursor_frame * 100) / total_frame);
+  }
+
+  char current_time[16];
+  char total_time[16];
+
+  format_time(cursor_frame, decoder.outputSampleRate, current_time,
+              sizeof(current_time));
+  format_time(total_frame, decoder.outputSampleRate, total_time,
+              sizeof(total_time));
+
+  mvprintw(3, 10, "%s / %s", current_time, total_time);
+
+  int bar_width = 30;
+  int filled = (percent * bar_width) / 100;
+
+  mvprintw(4, 0, "[");
+  for (int i = 0; i < bar_width; ++i) {
+    if (i < filled) {
+      addch('#');
+    } else {
+      addch('-');
+    }
+  }
+  printw("] %d%%", percent);
+}
+
 void draw(char *title) {
   draw_helper_ui();
 
@@ -97,6 +138,7 @@ void draw(char *title) {
     }
 
     draw_playback_ui(title);
+    draw_position();
   }
 
   endwin();
