@@ -6,6 +6,7 @@
 #include <string.h>
 #include <taglib/tag_c.h>
 
+float volume = 1.0f;
 int is_paused = 0;
 int is_helper_open = 0;
 ma_decoder decoder;
@@ -25,6 +26,13 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
   }
 
   ma_decoder_read_pcm_frames(pDecoder, pOutput, frameCount, NULL);
+
+  float *buffer = (float *)pOutput;
+  ma_uint32 channels = pDevice->playback.channels;
+
+  for (ma_uint32 i = 0; i < frameCount * channels; ++i) {
+    buffer[i] *= volume;
+  }
 
   (void)pInput;
 }
@@ -75,8 +83,23 @@ void init_terminal() {
   curs_set(0);
 }
 
+void increase_volume() {
+  volume += 0.05f;
+  if (volume > 1.0f)
+    volume = 1.0f;
+}
+
+void decrease_volume() {
+  volume -= 0.05f;
+  if (volume < 0.0f)
+    volume = 0.0f;
+}
+
 void print_playback_ui(char *title) {
   mvprintw(0, 0, "Now Playing: %s", title);
+  move(1, 0);
+  clrtoeol();
+  mvprintw(1, 0, "Volume: %d%%", (int)(volume * 100.0f + 0.5f));
   refresh();
 }
 
@@ -85,17 +108,19 @@ void print_helper_ui() {
   getmaxyx(stdscr, rows, cols);
 
   if (is_helper_open) {
-    const char *msg1 = "| help: h     |";
-    const char *msg2 = "| stop: space |";
-    const char *msg3 = "| quit: q     |";
+    const char *msg1 = "| help         : h             |";
+    const char *msg2 = "| stop         : space         |";
+    const char *msg3 = "| quit         : q             |";
+    const char *msg4 = "| change volume: arrow up/down |";
 
-    mvprintw(rows - 3, cols - 15, "%s", msg1);
-    mvprintw(rows - 2, cols - 15, "%s", msg2);
-    mvprintw(rows - 1, cols - 15, "%s", msg3);
+    mvprintw(rows - 4, cols - 32, "%s", msg1);
+    mvprintw(rows - 3, cols - 32, "%s", msg2);
+    mvprintw(rows - 2, cols - 32, "%s", msg3);
+    mvprintw(rows - 1, cols - 32, "%s", msg4);
     refresh();
   } else {
-    for (int i = 1; i < 4; i++) {
-      move(rows - i, cols - 15);
+    for (int i = 1; i < 5; i++) {
+      move(rows - i, cols - 32);
       clrtoeol();
     }
     refresh();
@@ -130,6 +155,17 @@ void draw(char *title) {
         print_helper_ui();
       }
     }
+
+    if (ch == KEY_UP) {
+      increase_volume();
+      print_playback_ui(title);
+    }
+
+    if (ch == KEY_DOWN) {
+      decrease_volume();
+      print_playback_ui(title);
+    }
+
     print_playback_ui(title);
   }
 
