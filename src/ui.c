@@ -5,6 +5,7 @@
 #include <string.h>
 
 int is_helper_open = 0;
+WINDOW *helper_win = NULL;
 
 void init_terminal() {
   initscr();
@@ -43,17 +44,32 @@ void draw_helper_ui() {
 
   int num_msgs = sizeof(help_msgs) / sizeof(help_msgs[0]);
 
+  int win_height = num_msgs + 2;
+  int win_width = 32;
+  int starty = rows - win_height;
+  int startx = cols - win_width;
+
   if (is_helper_open) {
-    for (int i = 0; i < num_msgs; i++) {
-      mvprintw(rows - (num_msgs - i), cols - 32, "%s", help_msgs[i]);
+    if (!helper_win) {
+      helper_win = newwin(win_height, win_width, starty, startx);
     }
-    refresh();
+
+    werase(helper_win);
+    box(helper_win, 0, 0);
+    mvwprintw(helper_win, 0, 2, " Keybindings ");
+
+    for (int i = 0; i < num_msgs; i++) {
+      mvwprintw(helper_win, i + 1, 3, "%s", help_msgs[i]);
+    }
+
+    wrefresh(helper_win);
   } else {
-    for (int i = 0; i < num_msgs; i++) {
-      move(rows - (num_msgs - i), cols - 32);
-      clrtoeol();
+    if (helper_win) {
+      werase(helper_win);
+      wrefresh(helper_win);
+      delwin(helper_win);
+      helper_win = NULL;
     }
-    refresh();
 
     const char *msg = "help: h";
     mvprintw(rows - 1, cols - strlen(msg), "%s", msg);
