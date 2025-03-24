@@ -8,7 +8,7 @@ ncurses(https://www.gnu.org/software/guile-ncurses/)
 
 ### USAGE
 
-player <file>
+`player <file>`
 
 ### keybinding
 
