@@ -19,5 +19,8 @@ $(BUILD_DIR):
 %.o: %.c $(TARGET_HEADERS)
 	$(CC) $(CFLAGS) -c $<
 
+debug: CFLAGS += -DDEBUG
+debug: $(TARGET)
+
 clean:
 	rm -rf $(BUILD_DIR)

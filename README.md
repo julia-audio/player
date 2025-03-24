@@ -21,3 +21,17 @@ shuffle
 repeat
 
 play from spotify
+
+### BUILD FROM SOURCE
+
+build
+
+`make`
+
+debug build
+
+`make debug`
+
+build clean
+
+`make clean`
