@@ -6,6 +6,24 @@ taglib(https://taglib.org/)
 
 ncurses(https://www.gnu.org/software/guile-ncurses/)
 
+### USAGE
+
+player <file>
+
+### keybinding
+
+`h` : open help window
+
+`q` : quit player
+
+`space` : stop playing & resume playing
+
+`arrow up` & `arrow down` : volume control
+
+`arrow left` & `arrow right` : seek
+
+`m` : mute toggle
+
 ### TODO
 
 UI REFACTORING
